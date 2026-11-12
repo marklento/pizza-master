@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pixel Pizza Master - Ultimate Pizza Companion</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace', 'ui-monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .digital-clock { font-family: 'JetBrains Mono', monospace; }
+        /* Hide scrollbars for clean mobile look */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Authentic 7-Segment LCD Styling */
+        .lcd-screen {
+            background-color: #d5dce0;
+            border-color: #b0bec5;
+            box-shadow: inset 0 3px 8px rgba(15, 23, 42, 0.16), 0 1px 0 rgba(255, 255, 255, 0.7);
+        }
+        .dark .lcd-screen {
+            background-color: #04131c;
+            border-color: rgba(0, 229, 255, 0.22);
+            box-shadow: inset 0 3px 12px rgba(0, 0, 0, 0.85), 0 0 16px rgba(0, 229, 255, 0.08);
+        }
+        .lcd-segment {
+            fill: rgba(26, 32, 36, 0.11);
+            transition: fill 0.08s ease, filter 0.08s ease;
+        }
+        .lcd-segment.on {
+            fill: #1a2024;
+        }
+        .dark .lcd-segment {
+            fill: rgba(0, 229, 255, 0.11);
+        }
+        .dark .lcd-segment.on {
+            fill: #00e5ff;
+            filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.65));
+        }
+        .lcd-colon-dot {
+            fill: rgba(26, 32, 36, 0.14);
+            transition: fill 0.12s ease;
+        }
+        .lcd-colon-dot.on {
+            fill: #1a2024;
+        }
+        .dark .lcd-colon-dot {
+            fill: rgba(0, 229, 255, 0.14);
+        }
+        .dark .lcd-colon-dot.on {
+            fill: #00e5ff;
+            filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.65));
+        }
+    </style>
+</head>
+<body class="h-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200 flex flex-col">
+
+    <!-- Top App Bar -->
+    <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            </div>
+            <div>
+                <h1 class="font-bold text-base leading-tight tracking-tight">Pixel Pizza Master</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Pixel 6 Pro Edition</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <!-- Theme Toggle Button -->
+            <button id="themeToggleBtn" onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition active:scale-95" aria-label="Toggle Theme">
+                <svg id="sunIcon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg id="moonIcon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+            <!-- Settings Modal Button -->
+            <button onclick="openSettingsModal()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition active:scale-95" aria-label="Settings">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container (Dynamic Order based on Settings) -->
+    <main id="mainContainer" class="flex-1 overflow-y-auto p-4 space-y-6 max-w-lg mx-auto w-full pb-24">
+        
+        <!-- SECTION 1: CALCULATOR -->
+        <div id="section-calculator" class="space-y-4">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-lg font-bold flex items-center space-x-2">
+                        <span class="p-2 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        </span>
+                        <span>Dough Calculator</span>
+                    </h2>
+                    <span id="doughWeightBadge" class="text-xs font-semibold px-2.5 py-1 bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 rounded-full">~390g / dough</span>
+                </div>
+
+                <!-- Dough Formula Badges -->
+                <div class="flex flex-wrap gap-1.5 mb-4">
+                    <span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">60% Hydration</span>
+                    <span id="saltRatioBadge" class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">2.1% Salt</span>
+                    <span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">2.1% EVOO</span>
+                </div>
+
+                <!-- Number of Pizzas Selector -->
+                <div class="space-y-2 mb-4">
+                    <div class="flex justify-between items-center text-sm font-medium">
+                        <label for="pizzaCountInput">Number of Pizzas</label>
+                        <span id="pizzaCountDisplay" class="text-orange-600 dark:text-orange-400 font-bold text-base">5</span>
+                    </div>
+                    <!-- Quick 1x - 5x Buttons -->
+                    <div class="grid grid-cols-5 gap-2">
+                        <button onclick="setPizzaCount(1)" class="py-2.5 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:border-orange-500 transition active:scale-95 pizza-btn" data-count="1">1x</button>
+                        <button onclick="setPizzaCount(2)" class="py-2.5 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:border-orange-500 transition active:scale-95 pizza-btn" data-count="2">2x</button>
+                        <button onclick="setPizzaCount(3)" class="py-2.5 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:border-orange-500 transition active:scale-95 pizza-btn" data-count="3">3x</button>
+                        <button onclick="setPizzaCount(4)" class="py-2.5 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:border-orange-500 transition active:scale-95 pizza-btn" data-count="4">4x</button>
+                        <button onclick="setPizzaCount(5)" class="py-2.5 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:border-orange-500 transition active:scale-95 pizza-btn" data-count="5">5x</button>
+                    </div>
+                    <!-- Slider input for exact control up to 15 -->
+                    <input id="pizzaCountInput" type="range" min="1" max="15" value="5" oninput="updateCalculator()" class="w-full accent-orange-600 mt-2 cursor-pointer">
+                </div>
+
+                <!-- Toggles Grid (Low-Sodium & Whole Wheat) -->
+                <div class="grid grid-cols-2 gap-3 mb-5">
+                    <!-- Low Sodium Toggle -->
+                    <button id="lowSodiumToggle" onclick="toggleLowSodium()" class="p-3 rounded-2xl border transition flex flex-col items-start justify-between text-left active:scale-95">
+                        <div class="flex items-center justify-between w-full mb-1">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Sodium Mode</span>
+                            <span id="lowSodiumIndicator" class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700 transition"></span>
+                        </div>
+                        <span id="lowSodiumLabel" class="font-bold text-sm">Regular Salt (2.1%)</span>
+                    </button>
+                    <!-- Whole Wheat Toggle -->
+                    <button id="wholeWheatToggle" onclick="toggleWholeWheat()" class="p-3 rounded-2xl border transition flex flex-col items-start justify-between text-left active:scale-95">
+                        <div class="flex items-center justify-between w-full mb-1">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Flour Type</span>
+                            <span id="wholeWheatIndicator" class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700 transition"></span>
+                        </div>
+                        <span id="wholeWheatLabel" class="font-bold text-sm">Regular Bread Flour</span>
+                    </button>
+                </div>
+
+                <!-- Ingredients Output Card -->
+                <div class="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/60 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Dough Ingredients Breakdown</h3>
+                    </div>
+                    
+                    <div id="ingredientList" class="space-y-2.5 text-sm">
+                        <!-- Dynamically generated ingredient rows -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SECTION 2: TIMERS -->
+        <div id="section-timers" class="space-y-4">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold flex items-center space-x-2">
+                        <span class="p-2 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </span>
+                        <span>Digital Timers</span>
+                    </h2>
+                    <div class="flex items-center space-x-1.5">
+                        <button onclick="openSettingsModal()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition active:scale-95" title="Timer Ringtone Settings" aria-label="Timer Ringtone Settings">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                        </button>
+                        <button onclick="openCustomTimerModal()" class="text-xs font-semibold px-3 py-2 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-100 transition flex items-center space-x-1 active:scale-95">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            <span>Add Preset</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 7-Segment LCD Digital Clock Display Card -->
+                <div class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-white rounded-2xl p-4 sm:p-5 text-center shadow-inner relative overflow-hidden mb-4 border border-slate-200 dark:border-slate-800 transition-colors">
+                    <div class="flex items-center justify-between mb-2.5 gap-2">
+                        <div id="timerActiveName" class="text-xs font-bold text-orange-600 dark:text-cyan-400 uppercase tracking-widest truncate flex-1 text-left">Select a Preset Below</div>
+                        <span id="activeRingtoneBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400 truncate max-w-[125px]">Default Beep</span>
+                    </div>
+                    
+                    <!-- Authentic 7-Segment LCD Screen -->
+                    <div class="lcd-screen rounded-xl py-4 px-3 sm:px-5 flex items-center justify-center border">
+                        <div id="lcdClockContainer" class="flex items-center justify-center gap-1.5 sm:gap-2.5 w-full max-w-[330px]" aria-label="Digital LCD Timer Display">
+                            <!-- Populated with SVG 7-segment digits -->
+                        </div>
+                    </div>
+
+                    <div id="timerProgressBarContainer" class="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden mt-3.5">
+                        <div id="timerProgressBar" class="bg-gradient-to-r from-amber-500 to-orange-500 dark:from-cyan-500 dark:to-sky-400 h-full w-0 transition-all duration-300"></div>
+                    </div>
+
+                    <!-- Stop Alarm Banner (Visible only when ringing) -->
+                    <button id="stopAlarmBtn" onclick="stopAlarmAudio()" class="hidden w-full mt-3 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-bold shadow-lg shadow-red-600/30 animate-pulse transition active:scale-95">
+                        Stop Alarm Ringtone
+                    </button>
+
+                    <!-- Timer Controls -->
+                    <div class="grid grid-cols-5 gap-2 mt-4">
+                        <button onclick="adjustTimer(-60)" class="py-3 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 text-xs font-bold transition active:scale-95">-1m</button>
+                        <button onclick="toggleTimer()" id="timerStartPauseBtn" class="col-span-2 py-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-sm font-bold shadow-lg shadow-orange-600/30 transition active:scale-95">Start</button>
+                        <button onclick="resetTimer()" class="py-3 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 text-xs font-bold transition active:scale-95">Reset</button>
+                        <button onclick="adjustTimer(60)" class="py-3 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 text-xs font-bold transition active:scale-95">+1m</button>
+                    </div>
+                </div>
+
+                <!-- Presets Grid -->
+                <div class="space-y-2">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Timer Presets (Tap to Load)</h3>
+                    <div id="timerPresetsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-72 overflow-y-auto pr-0.5">
+                        <!-- Dynamically rendered presets -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: INSTRUCTIONS & NOTES -->
+        <div id="section-instructions" class="space-y-4">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-bold flex items-center space-x-2">
+                        <span class="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012-2m-6 9l2 2 4-4"></path></svg>
+                        </span>
+                        <span>Instructions & Notes</span>
+                    </h2>
+                </div>
+
+                <!-- Accordion Steps & Recipes -->
+                <div class="space-y-2 text-sm">
+                    <!-- Step 1 -->
+                    <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+                        <button onclick="toggleAccordion('step1')" class="w-full p-4 text-left font-bold flex justify-between items-center bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                            <span>1. Mixing & Autolyse</span>
+                            <svg id="icon-step1" class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div id="content-step1" class="hidden p-4 space-y-2 text-slate-600 dark:text-slate-300 text-xs sm:text-sm border-t border-slate-200 dark:border-slate-800">
+                            <p>• Dissolve yeast in room temperature water.</p>
+                            <p>• Drop flour into the yeast/water mixture.</p>
+                            <p>• Mix until a loose dough forms using one of the mixer hooks. (Dough should be just a little bit sticky/shaggy).</p>
+                            <p>• Cover bowl with saran wrap and let sit for 30–60 minutes (Autolyse).</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+                        <button onclick="toggleAccordion('step2')" class="w-full p-4 text-left font-bold flex justify-between items-center bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                            <span>2. Kneading (Salt & Oil Order)</span>
+                            <svg id="icon-step2" class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div id="content-step2" class="hidden p-4 space-y-2 text-slate-600 dark:text-slate-300 text-xs sm:text-sm border-t border-slate-200 dark:border-slate-800">
+                            <p>• Add salt to the autolysed dough.</p>
+                            <p>• Attach hook to mixer. Mix at speed 2 for 4 minutes.</p>
+                            <p>• Add EV Olive Oil.</p>
+                            <p>• Mix at speed 2 for another 4 minutes.</p>
+                            <div class="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-xl text-amber-800 dark:text-amber-300 text-xs mt-2">
+                                <strong>Pro Note:</strong> Adding salt before oil creates a softer crust. Adding oil before salt creates a crunchier crust!
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+                        <button onclick="toggleAccordion('step3')" class="w-full p-4 text-left font-bold flex justify-between items-center bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                            <span>3. Shaping & Fermentation</span>
+                            <svg id="icon-step3" class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div id="content-step3" class="hidden p-4 space-y-2 text-slate-600 dark:text-slate-300 text-xs sm:text-sm border-t border-slate-200 dark:border-slate-800">
+                            <p>• Divide dough evenly (~390g each approx.).</p>
+                            <p>• Shape each dough into a boule by gently pushing up the center and pinching off the bottom. <strong>Bottom must be sealed.</strong></p>
+                            <p>• Put in Tupperware with a lightly oiled bottom and cover.</p>
+                            <p>• Keep out for 30 mins and then place in the fridge for up to 3 days (48hr cold rise).</p>
+                            <p>• <strong>Crucial:</strong> Take dough out of the fridge a MINIMUM of 90 minutes before using (usually 2 hours before using). Never stretch cold dough!</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Sauce Recipes (Cooked & Fresh) -->
+                    <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+                        <button onclick="toggleAccordion('step4')" class="w-full p-4 text-left font-bold flex justify-between items-center bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                            <span class="flex items-center space-x-2">
+                                <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                                <span>4. Pizza Sauce Recipes (6 Pizzas)</span>
+                            </span>
+                            <svg id="icon-step4" class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div id="content-step4" class="hidden p-4 space-y-4 text-slate-600 dark:text-slate-300 text-xs sm:text-sm border-t border-slate-200 dark:border-slate-800">
+                            <!-- Cooked Sauce -->
+                            <div class="space-y-1.5">
+                                <h4 class="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center justify-between">
+                                    <span>Pizza Sauce (Cooked)</span>
+                                    <span class="text-[11px] font-semibold px-2 py-0.5 rounded bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300">6 Pizzas</span>
+                                </h4>
+                                <p class="font-semibold text-slate-700 dark:text-slate-200 mt-1">Ingredients & Directions:</p>
+                                <ul class="list-disc pl-5 space-y-1">
+                                    <li><strong>San Marzano canned tomatoes</strong> (plum peeled w/ basil leaf) — Add fresh basil leaves, blend with hand mixer.</li>
+                                    <li>Cook <strong>garlic</strong> in vegetable oil until browned.</li>
+                                    <li>Add <strong>796 ml</strong> can of blended tomato sauce.</li>
+                                    <li>Add <strong>100 ml</strong> of water.</li>
+                                    <li>Add <strong>1/2 teaspoon (2.5 ml)</strong> of salt.</li>
+                                    <li>Bring to boil at medium/high heat (<strong>5 mins</strong>).</li>
+                                    <li>Lower heat and simmer for <strong>15 minutes</strong>.</li>
+                                </ul>
+                            </div>
+
+                            <hr class="border-slate-200 dark:border-slate-800">
+
+                            <!-- Fresh Sauce -->
+                            <div class="space-y-1.5">
+                                <h4 class="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center justify-between">
+                                    <span>Pizza Sauce (Fresh)</span>
+                                    <span class="text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">6 Pizzas</span>
+                                </h4>
+                                <p class="font-semibold text-slate-700 dark:text-slate-200 mt-1">Ingredients:</p>
+                                <ul class="list-disc pl-5 space-y-1">
+                                    <li>San Marzano canned tomatoes (plum peeled)</li>
+                                    <li>Sea Salt (<strong>2.5 ml</strong> for 796 ml can)</li>
+                                    <li>Fresh Basil Leaf(s)</li>
+                                    <li>Olive oil (if you want a bit extra flavor)</li>
+                                </ul>
+                                <p class="font-semibold text-slate-700 dark:text-slate-200 mt-2">Directions:</p>
+                                <p>• Hand mixer. Blend lightly (not fine / keep very small pieces for texture).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pro Tips Card -->
+                <div class="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-2xl p-4 space-y-2">
+                    <h3 class="font-bold text-sm text-amber-700 dark:text-amber-400 flex items-center space-x-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>Golden Notes & Pro Tips</span>
+                    </h3>
+                    <ul class="text-xs sm:text-sm space-y-1.5 text-slate-600 dark:text-slate-300 list-disc pl-4">
+                        <li><strong>Yeast conversion:</strong> Instant yeast grams to ml — multiply by <strong>1.56</strong>.</li>
+                        <li><strong>Whole wheat rule:</strong> Use 100g of whole wheat bread flour per total flour weight for each dough.</li>
+                        <li><strong>Peel prep:</strong> Use semola on pizza peel instead of flour so it doesn't stick.</li>
+                        <li><strong>Baking:</strong> Use convection oven at 550°F (or as high as oven goes) on the lowest level in the oven.</li>
+                        <li><strong>Toppings:</strong> Use part-skim mozzarella. Pre-cook veggies or fatty meats (bacon, sausage, etc.).</li>
+                        <li><strong>Yeast safety:</strong> Adding yeast to water that's too warm or having too much yeast might cause over-fermentation.</li>
+                        <li><strong>Crust texture:</strong> Adding salt before oil creates a softer crust. Adding oil before salt creates a crunchier crust.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settingsModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-center space-x-2.5">
+                    <h3 class="font-bold text-lg">App Settings</h3>
+                    <span class="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/70 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900">v0.8.0</span>
+                </div>
+                <button onclick="closeSettingsModal()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Timer Ringtone Settings -->
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Timer Ringtone / Alarm Sound</h4>
+                <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="min-w-0">
+                            <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Current Ringtone</div>
+                            <div id="settingsRingtoneName" class="text-sm font-bold truncate">Default Synthesized Beep</div>
+                        </div>
+                        <label class="shrink-0 cursor-pointer px-3.5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition active:scale-95">
+                            <span>Choose File</span>
+                            <input type="file" id="ringtoneFileInput" accept="audio/*" onchange="handleRingtoneUpload(event)" class="hidden">
+                        </label>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="testRingtone()" class="py-2.5 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition active:scale-95">
+                            Test Sound
+                        </button>
+                        <button onclick="stopAlarmAudio()" class="py-2.5 px-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 text-xs font-bold transition active:scale-95">
+                            Stop
+                        </button>
+                        <button onclick="resetDefaultRingtone()" class="py-2.5 px-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 text-xs font-bold transition active:scale-95">
+                            Default Beep
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Visibility Toggles -->
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Section Visibility</h4>
+                <div class="space-y-2">
+                    <label class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
+                        <span class="text-sm font-medium">Dough Calculator</span>
+                        <input type="checkbox" id="toggleVisCalculator" onchange="updateSectionVisibility()" class="w-5 h-5 accent-orange-600 rounded">
+                    </label>
+                    <label class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
+                        <span class="text-sm font-medium">Digital Timers</span>
+                        <input type="checkbox" id="toggleVisTimers" onchange="updateSectionVisibility()" class="w-5 h-5 accent-orange-600 rounded">
+                    </label>
+                    <label class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
+                        <span class="text-sm font-medium">Instructions & Notes</span>
+                        <input type="checkbox" id="toggleVisInstructions" onchange="updateSectionVisibility()" class="w-5 h-5 accent-orange-600 rounded">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Section Order Management -->
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Section Order</h4>
+                <div id="sectionOrderList" class="space-y-2">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- Data Management -->
+            <div class="space-y-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Data & Presets</h4>
+                <button onclick="resetDefaultPresets()" class="w-full py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                    Restore Default Timer Presets
+                </button>
+                <button onclick="resetAllData()" class="w-full py-3 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 font-bold text-sm hover:bg-red-100 transition">
+                    Reset All App Settings & Data
+                </button>
+                <div class="text-center pt-1">
+                    <span class="text-[11px] font-mono text-slate-400 dark:text-slate-500">Pixel Pizza Master • v0.8.0 • Local Storage Sync</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM TIMER MODAL -->
+    <div id="customTimerModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+                <h3 id="customTimerModalTitle" class="font-bold text-lg">Add Timer Preset</h3>
+                <button onclick="closeCustomTimerModal()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <input type="hidden" id="editTimerIndex" value="-1">
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Preset Name</label>
+                    <input type="text" id="customTimerName" placeholder="e.g., Dough Warm Up" class="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-orange-500">
+                </div>
+                <div class="grid grid-cols-3 gap-2.5">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Hours</label>
+                        <input type="number" id="customTimerHours" min="0" max="99" value="0" class="w-full px-3 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-mono focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Minutes</label>
+                        <input type="number" id="customTimerMins" min="0" max="59" value="30" class="w-full px-3 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-mono focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Seconds</label>
+                        <input type="number" id="customTimerSecs" min="0" max="59" value="0" class="w-full px-3 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-mono focus:outline-none focus:border-orange-500">
+                    </div>
+                </div>
+            </div>
+            <button onclick="saveCustomTimer()" class="w-full py-3.5 rounded-2xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm shadow-lg shadow-orange-600/30 transition">
+                Save Timer Preset
+            </button>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 transition-all duration-300 opacity-0 pointer-events-none border border-slate-800">
+        <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span id="toastMessage" class="text-sm font-medium">Notification</span>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        const APP_VERSION = 'v0.8.0';
+
+        const DEFAULT_TIMER_PRESETS = [
+            { name: 'Autolyse', seconds: 2700 },
+            { name: 'Knead Salt (Speed 2)', seconds: 240 },
+            { name: 'Knead Oil (Speed 2)', seconds: 240 },
+            { name: 'Room Temp Rest', seconds: 1800 },
+            { name: 'Warm Up Before Stretch', seconds: 7200 },
+            { name: 'Sauce Boil (Med/High)', seconds: 300 },
+            { name: 'Sauce Simmer (Low)', seconds: 900 }
+        ];
+
+        // --- APP STATE & STORAGE ---
+        let state = {
+            darkMode: false,
+            pizzaCount: 5,
+            isLowSodium: false,
+            isWholeWheat: false,
+            customRingtoneName: '',
+            customRingtoneData: '',
+            sectionVisibility: {
+                calculator: true,
+                timers: true,
+                instructions: true
+            },
+            sectionOrder: ['calculator', 'timers', 'instructions'],
+            timerPresets: JSON.parse(JSON.stringify(DEFAULT_TIMER_PRESETS))
+        };
+
+        // Session fallback URL if audio file exceeds localStorage quota
+        let sessionRingtoneUrl = '';
+        let activeAlarmAudio = null;
+        let synthBeepInterval = null;
+
+        // Timer engine state
+        let timerInterval = null;
+        let timerRemaining = 0;
+        let timerTotal = 0;
+        let timerRunning = false;
+        let activeTimerName = 'Select a Preset Below';
+// ... existing code ... -->
+        // --- INITIALIZATION ---
+        window.onload = function() {
+            loadFromLocalStorage();
+            applyTheme();
+            buildLcdDisplay();
+            updateTimerDisplay();
+            updateCalculator();
+            renderTimerPresets();
+            renderSectionOrderUI();
+            updateSectionVisibilityUI();
+            updateRingtoneUI();
+        };
+
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem('pixel_pizza_state', JSON.stringify(state));
+                return true;
+            } catch (e) {
+                console.error('LocalStorage save error:', e);
+                return false;
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const raw = localStorage.getItem('pixel_pizza_state');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    state = {
+                        ...state,
+                        ...parsed,
+                        sectionVisibility: {
+                            ...state.sectionVisibility,
+                            ...(parsed.sectionVisibility || {})
+                        }
+                    };
+                    if (!Array.isArray(state.sectionOrder) || state.sectionOrder.length === 0) {
+                        state.sectionOrder = ['calculator', 'timers', 'instructions'];
+                    }
+                    if (!Array.isArray(state.timerPresets)) {
+                        state.timerPresets = JSON.parse(JSON.stringify(DEFAULT_TIMER_PRESETS));
+                    }
+                }
+            } catch (e) {
+                console.error('LocalStorage load error:', e);
+            }
+            const inputEl = document.getElementById('pizzaCountInput');
+            if (inputEl) inputEl.value = state.pizzaCount;
+        }
+
+        // --- THEME & TOAST ---
+        function toggleDarkMode() {
+            state.darkMode = !state.darkMode;
+            applyTheme();
+            saveToLocalStorage();
+        }
+
+        function applyTheme() {
+            if (state.darkMode) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        let toastTimeout = null;
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+            if (!toast || !toastMsg) return;
+            toastMsg.innerText = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none');
+                toast.classList.remove('opacity-100');
+            }, 3000);
+        }
+
+        // --- CALCULATOR FILTERS ---
+        function setPizzaCount(count) {
+            document.getElementById('pizzaCountInput').value = count;
+            updateCalculator();
+        }
+
+        function toggleLowSodium() {
+            state.isLowSodium = !state.isLowSodium;
+            updateCalculator();
+            saveToLocalStorage();
+        }
+
+        function toggleWholeWheat() {
+            state.isWholeWheat = !state.isWholeWheat;
+            updateCalculator();
+            saveToLocalStorage();
+        }
+
+        function formatNum(val, decimals = 1) {
+            return Number(val.toFixed(decimals)).toString();
+        }
+
+        function updateCalculator() {
+            const countInput = document.getElementById('pizzaCountInput');
+            const n = Math.max(1, parseInt(countInput ? countInput.value : state.pizzaCount) || 1);
+            state.pizzaCount = n;
+
+            // Update count label & active quick-select button
+            const countDisplay = document.getElementById('pizzaCountDisplay');
+            if (countDisplay) countDisplay.innerText = n;
+
+            document.querySelectorAll('.pizza-btn').forEach(btn => {
+                const btnCount = parseInt(btn.getAttribute('data-count'));
+                if (btnCount === n) {
+                    btn.className = "py-2.5 rounded-xl text-sm font-bold border border-orange-500 bg-orange-600 text-white shadow-sm shadow-orange-600/25 transition active:scale-95 pizza-btn";
+                } else {
+                    btn.className = "py-2.5 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:border-orange-500 transition active:scale-95 pizza-btn";
+                }
+            });
+
+            // Update Low Sodium UI
+            const lowSodiumBtn = document.getElementById('lowSodiumToggle');
+            const lowSodiumInd = document.getElementById('lowSodiumIndicator');
+            const lowSodiumLbl = document.getElementById('lowSodiumLabel');
+            const saltRatioBadge = document.getElementById('saltRatioBadge');
+
+            if (state.isLowSodium) {
+                lowSodiumBtn.className = "p-3 rounded-2xl border border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 transition flex flex-col items-start justify-between text-left active:scale-95";
+                lowSodiumInd.className = "w-3 h-3 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50 transition";
+                lowSodiumLbl.innerText = "Low-Sodium (0.6g/ea)";
+                if (saltRatioBadge) saltRatioBadge.innerText = "Low-Sodium";
+            } else {
+                lowSodiumBtn.className = "p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 transition flex flex-col items-start justify-between text-left active:scale-95";
+                lowSodiumInd.className = "w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700 transition";
+                lowSodiumLbl.innerText = "Regular Salt (2.1%)";
+                if (saltRatioBadge) saltRatioBadge.innerText = "2.1% Salt";
+            }
+
+            // Update Whole Wheat UI
+            const wwBtn = document.getElementById('wholeWheatToggle');
+            const wwInd = document.getElementById('wholeWheatIndicator');
+            const wwLbl = document.getElementById('wholeWheatLabel');
+
+            if (state.isWholeWheat) {
+                wwBtn.className = "p-3 rounded-2xl border border-amber-500 bg-amber-50/70 dark:bg-amber-950/40 transition flex flex-col items-start justify-between text-left active:scale-95";
+                wwInd.className = "w-3 h-3 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50 transition";
+                wwLbl.innerText = "Whole Wheat Mix";
+            } else {
+                wwBtn.className = "p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 transition flex flex-col items-start justify-between text-left active:scale-95";
+                wwInd.className = "w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700 transition";
+                wwLbl.innerText = "Regular Bread Flour";
+            }
+
+            // Base 1x quantities matching notes (and 3x/5x exact notes)
+            const totalFlour = (n === 3 || n === 5) ? Math.round(237.5 * n) : +(237.5 * n).toFixed(1);
+            const water = (n === 3 || n === 5) ? Math.round(142.5 * n) : +(142.5 * n).toFixed(1);
+            const yeastGrams = +(0.9 * n).toFixed(1);
+            const yeastMl = +(1.25 * n).toFixed(2);
+            const saltGrams = state.isLowSodium ? +(0.6 * n).toFixed(1) : +(6.4 * n).toFixed(1);
+            const saltMl = state.isLowSodium ? null : +(5 * n).toFixed(1);
+            const oilMl = +(2.5 * n).toFixed(1);
+
+            const wholeWheatFlour = state.isWholeWheat ? Math.min(totalFlour, 100 * n) : 0;
+            const regularBreadFlour = +(totalFlour - wholeWheatFlour).toFixed(1);
+
+            let flourRowHTML = '';
+            if (state.isWholeWheat) {
+                flourRowHTML = `
+                    <div class="pb-2.5 border-b border-slate-200/70 dark:border-slate-700/60 space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="font-semibold text-slate-700 dark:text-slate-200">Total Flour</span>
+                            <span class="font-mono font-bold text-slate-900 dark:text-white">${formatNum(totalFlour)} g</span>
+                        </div>
+                        <div class="pl-3 border-l-2 border-amber-500/60 space-y-1 text-xs">
+                            <div class="flex items-center justify-between text-amber-800 dark:text-amber-300">
+                                <span>• Whole Wheat Bread Flour (100g/ea)</span>
+                                <span class="font-mono font-bold">${formatNum(wholeWheatFlour)} g</span>
+                            </div>
+                            <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
+                                <span>• Regular Bread Flour</span>
+                                <span class="font-mono font-bold">${formatNum(regularBreadFlour)} g</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                flourRowHTML = `
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-200/70 dark:border-slate-700/60">
+                        <span class="font-semibold text-slate-700 dark:text-slate-200">Bread Flour</span>
+                        <span class="font-mono font-bold text-slate-900 dark:text-white">${formatNum(totalFlour)} g</span>
+                    </div>
+                `;
+            }
+
+            const saltValueText = saltMl !== null
+                ? `${formatNum(saltGrams)} g <span class="text-xs font-normal text-slate-500 dark:text-slate-400">/ ${formatNum(saltMl)} ml</span>`
+                : `${formatNum(saltGrams)} g <span class="text-xs font-normal text-emerald-600 dark:text-emerald-400">(Low Sodium)</span>`;
+
+            const ingredientListHTML = `
+                ${flourRowHTML}
+                <div class="flex items-center justify-between pb-2 border-b border-slate-200/70 dark:border-slate-700/60">
+                    <span class="font-semibold text-slate-700 dark:text-slate-200">Water (Room Temp)</span>
+                    <span class="font-mono font-bold text-slate-900 dark:text-white">${formatNum(water)} ml</span>
+                </div>
+                <div class="flex items-center justify-between pb-2 border-b border-slate-200/70 dark:border-slate-700/60">
+                    <span class="font-semibold text-slate-700 dark:text-slate-200">Instant Yeast</span>
+                    <span class="font-mono font-bold text-slate-900 dark:text-white">${formatNum(yeastGrams)} g <span class="text-xs font-normal text-slate-500 dark:text-slate-400">/ ${formatNum(yeastMl, 2)} ml</span></span>
+                </div>
+                <div class="flex items-center justify-between pb-2 border-b border-slate-200/70 dark:border-slate-700/60">
+                    <span class="font-semibold text-slate-700 dark:text-slate-200">Salt</span>
+                    <span class="font-mono font-bold text-slate-900 dark:text-white">${saltValueText}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="font-semibold text-slate-700 dark:text-slate-200">EV Olive Oil</span>
+                    <span class="font-mono font-bold text-slate-900 dark:text-white">${formatNum(oilMl)} ml</span>
+                </div>
+            `;
+
+            document.getElementById('ingredientList').innerHTML = ingredientListHTML;
+            saveToLocalStorage();
+        }
+
+        // --- 7-SEGMENT LCD DISPLAY ENGINE ---
+        const SEGMENT_MAP = {
+            '0': ['a', 'b', 'c', 'd', 'e', 'f'],
+            '1': ['b', 'c'],
+            '2': ['a', 'b', 'g', 'e', 'd'],
+            '3': ['a', 'b', 'g', 'c', 'd'],
+            '4': ['f', 'g', 'b', 'c'],
+            '5': ['a', 'f', 'g', 'c', 'd'],
+            '6': ['a', 'f', 'g', 'e', 'c', 'd'],
+            '7': ['a', 'b', 'c'],
+            '8': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+            '9': ['a', 'b', 'c', 'd', 'f', 'g']
+        };
+
+        function createLcdDigitSVG(id) {
+            return `
+                <svg id="${id}" viewBox="0 0 54 92" class="w-8 sm:w-10 h-auto select-none">
+                    <!-- Top (a) -->
+                    <polygon data-seg="a" class="lcd-segment" points="10,4 44,4 38,11 16,11"/>
+                    <!-- Top-Right (b) -->
+                    <polygon data-seg="b" class="lcd-segment" points="46,6 50,10 50,42 46,45 41,40 41,13"/>
+                    <!-- Bottom-Right (c) -->
+                    <polygon data-seg="c" class="lcd-segment" points="46,47 50,50 50,82 46,86 41,79 41,52"/>
+                    <!-- Bottom (d) -->
+                    <polygon data-seg="d" class="lcd-segment" points="16,81 38,81 44,88 10,88"/>
+                    <!-- Bottom-Left (e) -->
+                    <polygon data-seg="e" class="lcd-segment" points="8,47 13,52 13,79 8,86 4,82 4,50"/>
+                    <!-- Top-Left (f) -->
+                    <polygon data-seg="f" class="lcd-segment" points="8,6 13,13 13,40 8,45 4,42 4,10"/>
+                    <!-- Middle (g) -->
+                    <polygon data-seg="g" class="lcd-segment" points="10,46 15,41 39,41 44,46 39,51 15,51"/>
+                </svg>
+            `;
+        }
+
+        function createLcdColonSVG(id) {
+            return `
+                <svg id="${id}" viewBox="0 0 14 92" class="w-2 sm:w-2.5 h-auto select-none">
+                    <circle class="lcd-colon-dot on" cx="7" cy="30" r="3.6"/>
+                    <circle class="lcd-colon-dot on" cx="7" cy="62" r="3.6"/>
+                </svg>
+            `;
+        }
+
+        function buildLcdDisplay() {
+            const container = document.getElementById('lcdClockContainer');
+            if (!container) return;
+            container.innerHTML = [
+                createLcdDigitSVG('lcd-d0'),
+                createLcdDigitSVG('lcd-d1'),
+                createLcdColonSVG('lcd-c0'),
+                createLcdDigitSVG('lcd-d2'),
+                createLcdDigitSVG('lcd-d3'),
+                createLcdColonSVG('lcd-c1'),
+                createLcdDigitSVG('lcd-d4'),
+                createLcdDigitSVG('lcd-d5')
+            ].join('');
+        }
+
+        function setLcdDigit(id, char) {
+            const svg = document.getElementById(id);
+            if (!svg) return;
+            const activeSegs = SEGMENT_MAP[char] || [];
+            svg.querySelectorAll('.lcd-segment').forEach(seg => {
+                const name = seg.getAttribute('data-seg');
+                if (activeSegs.includes(name)) {
+                    seg.classList.add('on');
+                } else {
+                    seg.classList.remove('on');
+                }
+            });
+        }
+
+        function formatDuration(totalSeconds) {
+            const hrs = Math.floor(totalSeconds / 3600);
+            const mins = Math.floor((totalSeconds % 3600) / 60);
+            const secs = totalSeconds % 60;
+            if (hrs > 0) {
+                return `${hrs}h ${mins.toString().padStart(2, '0')}m${secs > 0 ? ` ${secs}s` : ''}`;
+            }
+            if (secs > 0) {
+                return `${mins}m ${secs.toString().padStart(2, '0')}s`;
+            }
+            return `${mins} min`;
+        }
+
+        function updateTimerDisplay() {
+            const hrs = Math.floor(timerRemaining / 3600);
+            const mins = Math.floor((timerRemaining % 3600) / 60);
+            const secs = timerRemaining % 60;
+
+            const digits = (
+                hrs.toString().padStart(2, '0') +
+                mins.toString().padStart(2, '0') +
+                secs.toString().padStart(2, '0')
+            ).slice(-6);
+
+            for (let i = 0; i < 6; i++) {
+                setLcdDigit(`lcd-d${i}`, digits[i]);
+            }
+
+            // Blink colon dots every second while actively running
+            const colonOn = !timerRunning || (timerRemaining % 2 === 0);
+            document.querySelectorAll('.lcd-colon-dot').forEach(dot => {
+                if (colonOn) dot.classList.add('on');
+                else dot.classList.remove('on');
+            });
+
+            // Progress bar
+            const bar = document.getElementById('timerProgressBar');
+            if (bar) {
+                const pct = timerTotal > 0 ? ((timerTotal - timerRemaining) / timerTotal) * 100 : 0;
+                bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+            }
+
+            const nameEl = document.getElementById('timerActiveName');
+            if (nameEl) nameEl.innerText = activeTimerName;
+        }
+
+        function renderTimerPresets() {
+            const grid = document.getElementById('timerPresetsGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            if (state.timerPresets.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center text-xs text-slate-400 py-4">No presets saved. Tap "+ Add Preset" above.</div>`;
+                return;
+            }
+
+            state.timerPresets.forEach((preset, idx) => {
+                const card = document.createElement('div');
+                card.className = "flex items-center justify-between p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:border-blue-500/60 transition";
+                card.innerHTML = `
+                    <button onclick="loadPresetTimer(${idx})" class="flex-1 text-left pr-2 min-w-0 active:scale-98">
+                        <div class="font-bold text-xs sm:text-sm truncate">${preset.name}</div>
+                        <div class="text-[11px] font-mono text-blue-600 dark:text-cyan-400 font-semibold">${formatDuration(preset.seconds)}</div>
+                    </button>
+                    <div class="flex items-center space-x-1 shrink-0">
+                        <button onclick="openCustomTimerModal(${idx})" class="p-1.5 rounded-lg bg-slate-200/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 hover:bg-blue-100 dark:hover:bg-blue-950 hover:text-blue-600 transition" title="Edit Preset" aria-label="Edit Preset">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </button>
+                        <button onclick="deleteTimerPreset(${idx})" class="p-1.5 rounded-lg bg-slate-200/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 hover:bg-red-100 dark:hover:bg-red-950 hover:text-red-600 transition" title="Delete Preset" aria-label="Delete Preset">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function loadPresetTimer(idx) {
+            const preset = state.timerPresets[idx];
+            if (!preset) return;
+            stopTimer();
+            stopAlarmAudio();
+            activeTimerName = preset.name;
+            timerTotal = preset.seconds;
+            timerRemaining = preset.seconds;
+            updateTimerDisplay();
+            showToast(`Loaded: ${preset.name}`);
+        }
+
+        function toggleTimer() {
+            if (timerRunning) {
+                pauseTimer();
+            } else {
+                if (timerRemaining <= 0 && timerTotal > 0) {
+                    timerRemaining = timerTotal;
+                }
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            if (timerRemaining <= 0) return;
+            stopAlarmAudio();
+            timerRunning = true;
+            document.getElementById('timerStartPauseBtn').innerText = 'Pause';
+            document.getElementById('timerStartPauseBtn').className = "col-span-2 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold shadow-lg shadow-amber-600/30 transition active:scale-95";
+            
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (timerRemaining > 0) {
+                    timerRemaining--;
+                    updateTimerDisplay();
+                } else {
+                    stopTimer();
+                    updateTimerDisplay();
+                    playAlarmSound(true);
+                    showToast(`Timer Finished: ${activeTimerName}!`);
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            timerRunning = false;
+            clearInterval(timerInterval);
+            updateTimerDisplay();
+            document.getElementById('timerStartPauseBtn').innerText = 'Resume';
+            document.getElementById('timerStartPauseBtn').className = "col-span-2 py-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-sm font-bold shadow-lg shadow-orange-600/30 transition active:scale-95";
+        }
+
+        function stopTimer() {
+            timerRunning = false;
+            clearInterval(timerInterval);
+            document.getElementById('timerStartPauseBtn').innerText = 'Start';
+            document.getElementById('timerStartPauseBtn').className = "col-span-2 py-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-sm font-bold shadow-lg shadow-orange-600/30 transition active:scale-95";
+        }
+
+        function resetTimer() {
+            stopTimer();
+            stopAlarmAudio();
+            timerRemaining = timerTotal;
+            updateTimerDisplay();
+        }
+
+        function adjustTimer(sec) {
+            timerRemaining = Math.max(0, timerRemaining + sec);
+            timerTotal = Math.max(timerTotal, timerRemaining);
+            updateTimerDisplay();
+        }
+
+        // --- RINGTONE & ALARM AUDIO ENGINE ---
+        function updateRingtoneUI() {
+            const name = state.customRingtoneName || 'Default Synthesized Beep';
+            const badgeText = state.customRingtoneName ? state.customRingtoneName : 'Default Beep';
+            const settingsLabel = document.getElementById('settingsRingtoneName');
+            const badgeLabel = document.getElementById('activeRingtoneBadge');
+            if (settingsLabel) settingsLabel.innerText = name;
+            if (badgeLabel) badgeLabel.innerText = badgeText;
+        }
+
+        function handleRingtoneUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            stopAlarmAudio();
+            const fileName = file.name;
+
+            // Keep an immediate session URL ready
+            if (sessionRingtoneUrl) {
+                URL.revokeObjectURL(sessionRingtoneUrl);
+            }
+            sessionRingtoneUrl = URL.createObjectURL(file);
+
+            // Attempt base64 persistence in localStorage if file is reasonably sized (<= 3.2MB)
+            if (file.size <= 3.2 * 1024 * 1024) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const prevData = state.customRingtoneData;
+                    const prevName = state.customRingtoneName;
+                    state.customRingtoneName = fileName;
+                    state.customRingtoneData = e.target.result;
+
+                    if (saveToLocalStorage()) {
+                        updateRingtoneUI();
+                        showToast(`Ringtone saved: ${fileName}`);
+                    } else {
+                        // Quota exceeded: keep name & session audio active without crashing storage
+                        state.customRingtoneData = '';
+                        state.customRingtoneName = `${fileName} (Session)`;
+                        saveToLocalStorage();
+                        updateRingtoneUI();
+                        showToast('Audio loaded for this session (too large to save permanently)');
+                    }
+                };
+                reader.readAsDataURL(file);
+            } else {
+                state.customRingtoneData = '';
+                state.customRingtoneName = `${fileName} (Session)`;
+                saveToLocalStorage();
+                updateRingtoneUI();
+                showToast('Large audio file loaded for active session');
+            }
+            event.target.value = '';
+        }
+
+        function resetDefaultRingtone() {
+            stopAlarmAudio();
+            if (sessionRingtoneUrl) {
+                URL.revokeObjectURL(sessionRingtoneUrl);
+                sessionRingtoneUrl = '';
+            }
+            state.customRingtoneName = '';
+            state.customRingtoneData = '';
+            saveToLocalStorage();
+            updateRingtoneUI();
+            showToast('Restored default timer beep');
+        }
+
+        function testRingtone() {
+            playAlarmSound(false);
+        }
+
+        function triggerSynthBeep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+                gain.gain.setValueAtTime(0.45, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.65);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.7);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function playAlarmSound(loopAlarm = true) {
+            stopAlarmAudio();
+            const audioSrc = state.customRingtoneData || sessionRingtoneUrl;
+
+            if (loopAlarm) {
+                const stopBtn = document.getElementById('stopAlarmBtn');
+                if (stopBtn) stopBtn.classList.remove('hidden');
+            }
+
+            if (audioSrc) {
+                try {
+                    activeAlarmAudio = new Audio(audioSrc);
+                    activeAlarmAudio.loop = loopAlarm;
+                    activeAlarmAudio.play().catch(err => {
+                        console.warn('Custom audio playback failed, falling back to synth beep:', err);
+                        playSynthFallback(loopAlarm);
+                    });
+                    return;
+                } catch (e) {
+                    console.warn('Audio init failed:', e);
+                }
+            }
+
+            playSynthFallback(loopAlarm);
+        }
+
+        function playSynthFallback(loopAlarm) {
+            triggerSynthBeep();
+            if (loopAlarm) {
+                synthBeepInterval = setInterval(() => {
+                    triggerSynthBeep();
+                }, 1400);
+            }
+        }
+
+        function stopAlarmAudio() {
+            if (activeAlarmAudio) {
+                activeAlarmAudio.pause();
+                activeAlarmAudio.currentTime = 0;
+                activeAlarmAudio = null;
+            }
+            if (synthBeepInterval) {
+                clearInterval(synthBeepInterval);
+                synthBeepInterval = null;
+            }
+            const stopBtn = document.getElementById('stopAlarmBtn');
+            if (stopBtn) stopBtn.classList.add('hidden');
+        }
+
+        // Custom / Edit Timer Modal
+        function openCustomTimerModal(editIdx = -1) {
+            document.getElementById('editTimerIndex').value = editIdx;
+            if (editIdx >= 0 && state.timerPresets[editIdx]) {
+                const p = state.timerPresets[editIdx];
+                document.getElementById('customTimerModalTitle').innerText = 'Edit Timer Preset';
+                document.getElementById('customTimerName').value = p.name;
+                document.getElementById('customTimerHours').value = Math.floor(p.seconds / 3600);
+                document.getElementById('customTimerMins').value = Math.floor((p.seconds % 3600) / 60);
+                document.getElementById('customTimerSecs').value = p.seconds % 60;
+            } else {
+                document.getElementById('customTimerModalTitle').innerText = 'Add Timer Preset';
+                document.getElementById('customTimerName').value = '';
+                document.getElementById('customTimerHours').value = 0;
+                document.getElementById('customTimerMins').value = 15;
+                document.getElementById('customTimerSecs').value = 0;
+            }
+            document.getElementById('customTimerModal').classList.remove('hidden');
+        }
+
+        function closeCustomTimerModal() {
+            document.getElementById('customTimerModal').classList.add('hidden');
+        }
+
+        function saveCustomTimer() {
+            const name = document.getElementById('customTimerName').value.trim() || 'Custom Timer';
+            const hrs = Math.max(0, parseInt(document.getElementById('customTimerHours').value) || 0);
+            const mins = Math.max(0, parseInt(document.getElementById('customTimerMins').value) || 0);
+            const secs = Math.max(0, parseInt(document.getElementById('customTimerSecs').value) || 0);
+            const totalSecs = (hrs * 3600) + (mins * 60) + secs;
+            
+            if (totalSecs <= 0) {
+                showToast('Please enter a duration greater than 0 seconds');
+                return;
+            }
+
+            const editIdx = parseInt(document.getElementById('editTimerIndex').value);
+
+            if (editIdx >= 0) {
+                state.timerPresets[editIdx] = { name, seconds: totalSecs };
+                showToast('Timer preset updated!');
+            } else {
+                state.timerPresets.push({ name, seconds: totalSecs });
+                showToast('Timer preset saved!');
+            }
+            saveToLocalStorage();
+            renderTimerPresets();
+            closeCustomTimerModal();
+        }
+
+        function deleteTimerPreset(idx) {
+            const removed = state.timerPresets.splice(idx, 1);
+            saveToLocalStorage();
+            renderTimerPresets();
+            if (removed.length > 0) {
+                showToast(`Deleted "${removed[0].name}"`);
+            }
+        }
+
+        function resetDefaultPresets() {
+            state.timerPresets = JSON.parse(JSON.stringify(DEFAULT_TIMER_PRESETS));
+            saveToLocalStorage();
+            renderTimerPresets();
+            showToast('Default timer presets restored');
+        }
+
+        // --- ACCORDION INSTRUCTIONS ---
+        function toggleAccordion(id) {
+            const content = document.getElementById('content-' + id);
+            const icon = document.getElementById('icon-' + id);
+            content.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
+
+        // --- SETTINGS & MODAL ---
+        function openSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('hidden');
+            updateSectionVisibilityUI();
+            renderSectionOrderUI();
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function updateSectionVisibility() {
+            state.sectionVisibility.calculator = document.getElementById('toggleVisCalculator').checked;
+            state.sectionVisibility.timers = document.getElementById('toggleVisTimers').checked;
+            state.sectionVisibility.instructions = document.getElementById('toggleVisInstructions').checked;
+            saveToLocalStorage();
+            applySectionVisibilityAndOrder();
+        }
+
+        function updateSectionVisibilityUI() {
+            document.getElementById('toggleVisCalculator').checked = state.sectionVisibility.calculator;
+            document.getElementById('toggleVisTimers').checked = state.sectionVisibility.timers;
+            document.getElementById('toggleVisInstructions').checked = state.sectionVisibility.instructions;
+            applySectionVisibilityAndOrder();
+        }
+
+        function renderSectionOrderUI() {
+            const list = document.getElementById('sectionOrderList');
+            list.innerHTML = '';
+            const names = { calculator: 'Dough Calculator', timers: 'Digital Timers', instructions: 'Instructions & Notes' };
+            
+            state.sectionOrder.forEach((secKey, idx) => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-sm font-medium";
+                div.innerHTML = `
+                    <span>${idx + 1}. ${names[secKey]}</span>
+                    <div class="flex items-center space-x-1">
+                        <button onclick="moveSection(${idx}, -1)" ${idx === 0 ? 'disabled class="opacity-30 p-1.5"' : 'class="p-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg hover:bg-slate-300 transition"'}>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                        </button>
+                        <button onclick="moveSection(${idx}, 1)" ${idx === state.sectionOrder.length - 1 ? 'disabled class="opacity-30 p-1.5"' : 'class="p-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg hover:bg-slate-300 transition"'}>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function moveSection(idx, direction) {
+            const newIdx = idx + direction;
+            if (newIdx < 0 || newIdx >= state.sectionOrder.length) return;
+            const temp = state.sectionOrder[idx];
+            state.sectionOrder[idx] = state.sectionOrder[newIdx];
+            state.sectionOrder[newIdx] = temp;
+            saveToLocalStorage();
+            renderSectionOrderUI();
+            applySectionVisibilityAndOrder();
+        }
+
+        function applySectionVisibilityAndOrder() {
+            const container = document.getElementById('mainContainer');
+            state.sectionOrder.forEach(secKey => {
+                const el = document.getElementById('section-' + secKey);
+                if (el) {
+                    container.appendChild(el);
+                    if (state.sectionVisibility[secKey]) {
+                        el.classList.remove('hidden');
+                    } else {
+                        el.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        function resetAllData() {
+            localStorage.removeItem('pixel_pizza_state');
+            location.reload();
+        }
+    </script>
+</body>
+</html>

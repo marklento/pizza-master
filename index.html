@@ -89,12 +89,12 @@
     <!-- Top App Bar -->
     <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
         <div class="flex items-center space-x-2">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-md shadow-orange-500/20 overflow-hidden">
+                <img src="Screenshot_20261112-185555.png" alt="Icon" class="w-full h-full object-cover">
             </div>
             <div>
                 <h1 class="font-bold text-base leading-tight tracking-tight">Pixel Pizza Master</h1>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Pixel 6 Pro Edition</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">v0.8.6 • Pixel 6 Pro Edition</p>
             </div>
         </div>
         <div class="flex items-center space-x-2">
@@ -359,7 +359,7 @@
             <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
                 <div class="flex items-center space-x-2.5">
                     <h3 class="font-bold text-lg">App Settings</h3>
-                    <span class="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/70 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900">v0.8.5</span>
+                    <span class="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/70 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900">v0.8.6</span>
                 </div>
                 <button onclick="closeSettingsModal()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -494,7 +494,7 @@
 
     <!-- SCRIPT -->
     <script>
-        const APP_VERSION = 'v0.8.5';
+        const APP_VERSION = 'v0.8.6';
         let deferredInstallPrompt = null;
 
         const DEFAULT_TIMER_PRESETS = [
@@ -557,122 +557,49 @@
             updateInstallUI();
         };
 
-        function generateExactItalianFlagIconPng(size) {
-            const canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d');
-
-            const third = size / 3;
-            // Full-bleed Italian Flag vertical stripes (Green, White, Red)
-            ctx.fillStyle = '#008C45';
-            ctx.fillRect(0, 0, third + 2, size);
-            ctx.fillStyle = '#F4F5F0';
-            ctx.fillRect(third - 1, 0, third + 2, size);
-            ctx.fillStyle = '#CD212A';
-            ctx.fillRect(third * 2 - 1, 0, third + 2, size);
-
-            // Centered Pizza Seal Badge (filling ~86% of icon canvas)
-            const cx = size / 2;
-            const cy = size / 2;
-            const radius = size * 0.43;
-
-            // Outer drop shadow for badge
-            ctx.save();
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
-            ctx.shadowBlur = size * 0.05;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = size * 0.02;
-
-            // Dark blue badge background circle
-            ctx.beginPath();
-            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-            ctx.fillStyle = '#0f2433';
-            ctx.fill();
-            ctx.lineWidth = size * 0.035;
-            ctx.strokeStyle = '#1b3a52';
-            ctx.stroke();
-            ctx.restore();
-
-            // Inner pizza crust rim background
-            ctx.beginPath();
-            ctx.arc(cx, cy, radius * 0.88, 0, Math.PI * 2);
-            ctx.fillStyle = '#fef3c7';
-            ctx.fill();
-
-            // Crust rim outline
-            ctx.beginPath();
-            ctx.arc(cx, cy, radius * 0.88, 0, Math.PI * 2);
-            ctx.lineWidth = size * 0.038;
-            ctx.strokeStyle = '#d97706';
-            ctx.stroke();
-
-            // Pizza Slice Divider Lines (8 slices)
-            ctx.save();
-            ctx.translate(cx, cy);
-            ctx.strokeStyle = '#78350f';
-            ctx.lineWidth = Math.max(1, size * 0.012);
-            for (let i = 0; i < 4; i++) {
-                ctx.rotate(Math.PI / 4);
-                ctx.beginPath();
-                ctx.moveTo(-radius * 0.82, 0);
-                ctx.lineTo(radius * 0.82, 0);
-                ctx.stroke();
-            }
-            ctx.restore();
-
-            // Pepperoni and Basil Dots
-            const dotPositions = [
-                [-0.34, -0.34], [0.36, -0.32], [-0.32, 0.38], [0.35, 0.36],
-                [0, -0.50], [-0.50, 0], [0.50, 0], [0, 0.50]
-            ];
-            dotPositions.forEach(([px, py], idx) => {
-                ctx.beginPath();
-                ctx.arc(cx + px * radius, cy + py * radius, radius * 0.12, 0, Math.PI * 2);
-                ctx.fillStyle = (idx % 2 === 0) ? '#dc2626' : '#15803d';
-                ctx.fill();
-            });
-
-            // "PIZZA MASTER" Text Banner along bottom arc
-            ctx.save();
-            ctx.translate(cx, cy);
-            ctx.font = `bold ${Math.round(size * 0.11)}px sans-serif`;
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText("PIZZA MASTER", 0, radius * 0.65);
-            ctx.restore();
-
-            return canvas.toDataURL('image/png');
-        }
-
         function setupPwaManifestAndIcons() {
             try {
-                const iconPng = generateExactItalianFlagIconPng(512);
-                const faviconLink = document.getElementById('pwaFaviconLink');
-                const appleIconLink = document.getElementById('pwaAppleIconLink');
-                if (faviconLink) faviconLink.href = iconPng;
-                if (appleIconLink) appleIconLink.href = iconPng;
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = function() {
+                    const createIconDataUrl = (size) => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = size;
+                        canvas.height = size;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, size, size);
+                        return canvas.toDataURL('image/png');
+                    };
 
-                const manifest = {
-                    id: './',
-                    name: 'Pixel Pizza Master',
-                    short_name: 'Pizza Master',
-                    start_url: './',
-                    scope: './',
-                    display: 'standalone',
-                    orientation: 'portrait',
-                    background_color: '#0f2433',
-                    theme_color: '#0f2433',
-                    icons: [
-                        { src: iconPng, sizes: '192x192', type: 'image/png', purpose: 'any' },
-                        { src: iconPng, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
-                    ]
+                    const icon192 = createIconDataUrl(192);
+                    const icon512 = createIconDataUrl(512);
+
+                    const faviconLink = document.getElementById('pwaFaviconLink');
+                    const appleIconLink = document.getElementById('pwaAppleIconLink');
+                    if (faviconLink) faviconLink.href = icon192;
+                    if (appleIconLink) appleIconLink.href = icon192;
+
+                    const manifest = {
+                        id: './',
+                        name: 'Pixel Pizza Master',
+                        short_name: 'Pizza Master',
+                        start_url: './',
+                        scope: './',
+                        display: 'standalone',
+                        orientation: 'portrait',
+                        background_color: '#0f2433',
+                        theme_color: '#0f2433',
+                        icons: [
+                            { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any' },
+                            { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+                        ]
+                    };
+                    const manifestLink = document.getElementById('pwaManifestLink');
+                    if (manifestLink) {
+                        manifestLink.setAttribute('href', 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest)));
+                    }
                 };
-                const manifestLink = document.getElementById('pwaManifestLink');
-                if (manifestLink) {
-                    manifestLink.setAttribute('href', 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest)));
-                }
+                img.src = 'Screenshot_20261112-185555.png';
 
                 if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
                     const swCode = `

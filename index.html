@@ -359,7 +359,7 @@
             <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
                 <div class="flex items-center space-x-2.5">
                     <h3 class="font-bold text-lg">App Settings</h3>
-                    <span class="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/70 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900">v0.8.3</span>
+                    <span class="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/70 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900">v0.8.4</span>
                 </div>
                 <button onclick="closeSettingsModal()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -494,7 +494,7 @@
 
     <!-- SCRIPT -->
     <script>
-        const APP_VERSION = 'v0.8.3';
+        const APP_VERSION = 'v0.8.4';
         let deferredInstallPrompt = null;
 
         const DEFAULT_TIMER_PRESETS = [
@@ -557,38 +557,94 @@
             updateInstallUI();
         };
 
-        function generateAppIconPng(size) {
+        function generateItalianFlagIconPng(size) {
             const canvas = document.createElement('canvas');
             canvas.width = size;
             canvas.height = size;
             const ctx = canvas.getContext('2d');
-            const grad = ctx.createLinearGradient(0, size, size, 0);
-            grad.addColorStop(0, '#f59e0b');
-            grad.addColorStop(1, '#ea580c');
-            const radius = size * 0.22;
+
+            const third = size / 3;
+            // Italian Flag Stripes (Green, White, Red)
+            ctx.fillStyle = '#008C45';
+            ctx.fillRect(0, 0, third, size);
+            ctx.fillStyle = '#F4F5F0';
+            ctx.fillRect(third, 0, third, size);
+            ctx.fillStyle = '#CD212A';
+            ctx.fillRect(third * 2, 0, third, size);
+
+            // Center Pizza Seal Badge
+            const cx = size / 2;
+            const cy = size / 2;
+            const radius = size * 0.39;
+
+            // Outer dark blue ring shadow/border
             ctx.beginPath();
-            ctx.moveTo(radius, 0);
-            ctx.lineTo(size - radius, 0);
-            ctx.quadraticCurveTo(size, 0, size, radius);
-            ctx.lineTo(size, size - radius);
-            ctx.quadraticCurveTo(size, size, size - radius, size);
-            ctx.lineTo(radius, size);
-            ctx.quadraticCurveTo(0, size, 0, size - radius);
-            ctx.lineTo(0, radius);
-            ctx.quadraticCurveTo(0, 0, radius, 0);
-            ctx.closePath();
-            ctx.fillStyle = grad;
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#0b1d28';
             ctx.fill();
+            ctx.lineWidth = size * 0.035;
+            ctx.strokeStyle = '#1d3557';
+            ctx.stroke();
+
+            // Inner pizza crust background
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius * 0.88, 0, Math.PI * 2);
+            ctx.fillStyle = '#fef3c7';
+            ctx.fill();
+
+            // Crust rim
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius * 0.88, 0, Math.PI * 2);
+            ctx.lineWidth = size * 0.04;
+            ctx.strokeStyle = '#d97706';
+            ctx.stroke();
+
+            // Pizza Slice Divider Lines
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.strokeStyle = '#78350f';
+            ctx.lineWidth = Math.max(1, size * 0.012);
+            for (let i = 0; i < 4; i++) {
+                ctx.rotate(Math.PI / 4);
+                ctx.beginPath();
+                ctx.moveTo(-radius * 0.82, 0);
+                ctx.lineTo(radius * 0.82, 0);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // Pepperoni and Basil Dots
+            const dotPositions = [
+                [-0.35, -0.35], [0.38, -0.32], [-0.32, 0.4], [0.35, 0.38],
+                [0, -0.52], [-0.52, 0], [0.52, 0], [0, 0.52]
+            ];
+            dotPositions.forEach(([px, py], idx) => {
+                ctx.beginPath();
+                ctx.arc(cx + px * radius, cy + py * radius, radius * 0.13, 0, Math.PI * 2);
+                ctx.fillStyle = (idx % 2 === 0) ? '#dc2626' : '#15803d';
+                ctx.fill();
+            });
+
+            // "PIZZA MASTER" Curved Text Header/Footer
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.font = `bold ${Math.round(size * 0.11)}px sans-serif`;
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText("PIZZA MASTER", 0, radius * 0.64);
+            ctx.restore();
+
             return canvas.toDataURL('image/png');
         }
 
         function setupPwaManifestAndIcons() {
             try {
-                const icon192 = generateAppIconPng(192);
+                const iconPng = generateItalianFlagIconPng(512);
                 const faviconLink = document.getElementById('pwaFaviconLink');
                 const appleIconLink = document.getElementById('pwaAppleIconLink');
-                if (faviconLink) faviconLink.href = icon192;
-                if (appleIconLink) appleIconLink.href = icon192;
+                if (faviconLink) faviconLink.href = iconPng;
+                if (appleIconLink) appleIconLink.href = iconPng;
 
                 const manifest = {
                     id: './',
@@ -598,9 +654,12 @@
                     scope: './',
                     display: 'standalone',
                     orientation: 'portrait',
-                    background_color: '#020617',
-                    theme_color: '#ea580c',
-                    icons: [{ src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' }]
+                    background_color: '#F4F5F0',
+                    theme_color: '#0b1d28',
+                    icons: [
+                        { src: iconPng, sizes: '192x192', type: 'image/png', purpose: 'any' },
+                        { src: iconPng, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+                    ]
                 };
                 const manifestLink = document.getElementById('pwaManifestLink');
                 if (manifestLink) {
@@ -1078,54 +1137,49 @@
                 }
 
                 if (toneId === 'tarantella') {
-                    // Iconic Neapolitan Tarantella riff (A minor / E7)
                     playMelodySequence(activeAudioCtx, [
-                        [440.00, 0.00, 0.14], // A4
-                        [523.25, 0.14, 0.14], // C5
-                        [659.25, 0.28, 0.14], // E5
-                        [523.25, 0.42, 0.14], // C5
-                        [440.00, 0.56, 0.14], // A4
-                        [659.25, 0.70, 0.14], // E5
-                        [587.33, 0.84, 0.16], // D5
-                        [523.25, 1.00, 0.16], // C5
-                        [493.88, 1.16, 0.18], // B4
-                        [440.00, 1.36, 0.40]  // A4
+                        [440.00, 0.00, 0.14],
+                        [523.25, 0.14, 0.14],
+                        [659.25, 0.28, 0.14],
+                        [523.25, 0.42, 0.14],
+                        [440.00, 0.56, 0.14],
+                        [659.25, 0.70, 0.14],
+                        [587.33, 0.84, 0.16],
+                        [523.25, 1.00, 0.16],
+                        [493.88, 1.16, 0.18],
+                        [440.00, 1.36, 0.40]
                     ], 'triangle', 0.32);
                 } else if (toneId === 'funiculi') {
-                    // Upbeat Italian Tarantella cadence
                     playMelodySequence(activeAudioCtx, [
-                        [523.25, 0.00, 0.15], // C5
-                        [659.25, 0.16, 0.15], // E5
-                        [783.99, 0.32, 0.26], // G5
-                        [783.99, 0.62, 0.15], // G5
-                        [659.25, 0.78, 0.15], // E5
-                        [523.25, 0.94, 0.28], // C5
-                        [659.25, 1.26, 0.16], // E5
-                        [783.99, 1.44, 0.42]  // G5
+                        [523.25, 0.00, 0.15],
+                        [659.25, 0.16, 0.15],
+                        [783.99, 0.32, 0.26],
+                        [783.99, 0.62, 0.15],
+                        [659.25, 0.78, 0.15],
+                        [523.25, 0.94, 0.28],
+                        [659.25, 1.26, 0.16],
+                        [783.99, 1.44, 0.42]
                     ], 'triangle', 0.30);
                 } else if (toneId === 'solemio') {
-                    // Warm Neapolitan serenade chime
                     playMelodySequence(activeAudioCtx, [
-                        [392.00, 0.00, 0.32], // G4
-                        [659.25, 0.34, 0.42], // E5
-                        [587.33, 0.78, 0.28], // D5
-                        [523.25, 1.08, 0.35], // C5
-                        [493.88, 1.45, 0.28], // B4
-                        [523.25, 1.75, 0.55]  // C5
+                        [392.00, 0.00, 0.32],
+                        [659.25, 0.34, 0.42],
+                        [587.33, 0.78, 0.28],
+                        [523.25, 1.08, 0.35],
+                        [493.88, 1.45, 0.28],
+                        [523.25, 1.75, 0.55]
                     ], 'sine', 0.34);
                 } else if (toneId === 'mandolin') {
-                    // Quick plucked Italian mandolin tremolo arpeggio
                     playMelodySequence(activeAudioCtx, [
-                        [329.63, 0.00, 0.12], // E4
-                        [493.88, 0.11, 0.12], // B4
-                        [659.25, 0.22, 0.12], // E5
-                        [783.99, 0.33, 0.14], // G5
-                        [987.77, 0.48, 0.22], // B5
-                        [783.99, 0.72, 0.14], // G5
-                        [987.77, 0.88, 0.45]  // B5
+                        [329.63, 0.00, 0.12],
+                        [493.88, 0.11, 0.12],
+                        [659.25, 0.22, 0.12],
+                        [783.99, 0.33, 0.14],
+                        [987.77, 0.48, 0.22],
+                        [783.99, 0.72, 0.14],
+                        [987.77, 0.88, 0.45]
                     ], 'triangle', 0.28);
                 } else {
-                    // Classic Kitchen Beep
                     playMelodySequence(activeAudioCtx, [
                         [587.33, 0.00, 0.22],
                         [880.00, 0.25, 0.45]

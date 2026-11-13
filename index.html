@@ -359,7 +359,7 @@
             <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
                 <div class="flex items-center space-x-2.5">
                     <h3 class="font-bold text-lg">App Settings</h3>
-                    <span class="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/70 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900">v0.8.4</span>
+                    <span class="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/70 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900">v0.8.5</span>
                 </div>
                 <button onclick="closeSettingsModal()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -494,7 +494,7 @@
 
     <!-- SCRIPT -->
     <script>
-        const APP_VERSION = 'v0.8.4';
+        const APP_VERSION = 'v0.8.5';
         let deferredInstallPrompt = null;
 
         const DEFAULT_TIMER_PRESETS = [
@@ -537,7 +537,7 @@
         // Smooth High-Precision Timer Variables
         let timerAnimFrame = null;
         let timerEndTimestamp = 0;
-        let timerRemaining = 0; // integer seconds for LCD display
+        let timerRemaining = 0;
         let timerTotal = 0;
         let timerRunning = false;
         let activeTimerName = 'Select a Preset Below';
@@ -557,49 +557,57 @@
             updateInstallUI();
         };
 
-        function generateItalianFlagIconPng(size) {
+        function generateExactItalianFlagIconPng(size) {
             const canvas = document.createElement('canvas');
             canvas.width = size;
             canvas.height = size;
             const ctx = canvas.getContext('2d');
 
             const third = size / 3;
-            // Italian Flag Stripes (Green, White, Red)
+            // Full-bleed Italian Flag vertical stripes (Green, White, Red)
             ctx.fillStyle = '#008C45';
-            ctx.fillRect(0, 0, third, size);
+            ctx.fillRect(0, 0, third + 2, size);
             ctx.fillStyle = '#F4F5F0';
-            ctx.fillRect(third, 0, third, size);
+            ctx.fillRect(third - 1, 0, third + 2, size);
             ctx.fillStyle = '#CD212A';
-            ctx.fillRect(third * 2, 0, third, size);
+            ctx.fillRect(third * 2 - 1, 0, third + 2, size);
 
-            // Center Pizza Seal Badge
+            // Centered Pizza Seal Badge (filling ~86% of icon canvas)
             const cx = size / 2;
             const cy = size / 2;
-            const radius = size * 0.39;
+            const radius = size * 0.43;
 
-            // Outer dark blue ring shadow/border
+            // Outer drop shadow for badge
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+            ctx.shadowBlur = size * 0.05;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = size * 0.02;
+
+            // Dark blue badge background circle
             ctx.beginPath();
             ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-            ctx.fillStyle = '#0b1d28';
+            ctx.fillStyle = '#0f2433';
             ctx.fill();
             ctx.lineWidth = size * 0.035;
-            ctx.strokeStyle = '#1d3557';
+            ctx.strokeStyle = '#1b3a52';
             ctx.stroke();
+            ctx.restore();
 
-            // Inner pizza crust background
+            // Inner pizza crust rim background
             ctx.beginPath();
             ctx.arc(cx, cy, radius * 0.88, 0, Math.PI * 2);
             ctx.fillStyle = '#fef3c7';
             ctx.fill();
 
-            // Crust rim
+            // Crust rim outline
             ctx.beginPath();
             ctx.arc(cx, cy, radius * 0.88, 0, Math.PI * 2);
-            ctx.lineWidth = size * 0.04;
+            ctx.lineWidth = size * 0.038;
             ctx.strokeStyle = '#d97706';
             ctx.stroke();
 
-            // Pizza Slice Divider Lines
+            // Pizza Slice Divider Lines (8 slices)
             ctx.save();
             ctx.translate(cx, cy);
             ctx.strokeStyle = '#78350f';
@@ -615,24 +623,24 @@
 
             // Pepperoni and Basil Dots
             const dotPositions = [
-                [-0.35, -0.35], [0.38, -0.32], [-0.32, 0.4], [0.35, 0.38],
-                [0, -0.52], [-0.52, 0], [0.52, 0], [0, 0.52]
+                [-0.34, -0.34], [0.36, -0.32], [-0.32, 0.38], [0.35, 0.36],
+                [0, -0.50], [-0.50, 0], [0.50, 0], [0, 0.50]
             ];
             dotPositions.forEach(([px, py], idx) => {
                 ctx.beginPath();
-                ctx.arc(cx + px * radius, cy + py * radius, radius * 0.13, 0, Math.PI * 2);
+                ctx.arc(cx + px * radius, cy + py * radius, radius * 0.12, 0, Math.PI * 2);
                 ctx.fillStyle = (idx % 2 === 0) ? '#dc2626' : '#15803d';
                 ctx.fill();
             });
 
-            // "PIZZA MASTER" Curved Text Header/Footer
+            // "PIZZA MASTER" Text Banner along bottom arc
             ctx.save();
             ctx.translate(cx, cy);
             ctx.font = `bold ${Math.round(size * 0.11)}px sans-serif`;
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText("PIZZA MASTER", 0, radius * 0.64);
+            ctx.fillText("PIZZA MASTER", 0, radius * 0.65);
             ctx.restore();
 
             return canvas.toDataURL('image/png');
@@ -640,7 +648,7 @@
 
         function setupPwaManifestAndIcons() {
             try {
-                const iconPng = generateItalianFlagIconPng(512);
+                const iconPng = generateExactItalianFlagIconPng(512);
                 const faviconLink = document.getElementById('pwaFaviconLink');
                 const appleIconLink = document.getElementById('pwaAppleIconLink');
                 if (faviconLink) faviconLink.href = iconPng;
@@ -654,8 +662,8 @@
                     scope: './',
                     display: 'standalone',
                     orientation: 'portrait',
-                    background_color: '#F4F5F0',
-                    theme_color: '#0b1d28',
+                    background_color: '#0f2433',
+                    theme_color: '#0f2433',
                     icons: [
                         { src: iconPng, sizes: '192x192', type: 'image/png', purpose: 'any' },
                         { src: iconPng, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
@@ -921,14 +929,12 @@
 
             for (let i = 0; i < 6; i++) setLcdDigit(`lcd-d${i}`, digits[i]);
 
-            // Toggle CSS smooth 0.5s fade pulse on colons when running
             const clockContainer = document.getElementById('lcdClockContainer');
             if (clockContainer) {
                 if (timerRunning) clockContainer.classList.add('lcd-colon-flashing');
                 else clockContainer.classList.remove('lcd-colon-flashing');
             }
 
-            // Smooth continuous progress bar update
             const bar = document.getElementById('timerProgressBar');
             if (bar) {
                 const currentRem = exactRemainingSec !== null ? exactRemainingSec : timerRemaining;
@@ -1037,7 +1043,6 @@
             updateTimerDisplay(timerRemaining);
         }
 
-        // Built-in & Custom Ringtone System
         function renderBuiltInRingtones() {
             const grid = document.getElementById('builtInRingtonesGrid');
             if (!grid) return;
